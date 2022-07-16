@@ -10,7 +10,7 @@
     <packaging>jar</packaging>
     <name>WeChat MP</name>
     <description>WeChat MP for Java</description>
-    <url>https://github/pannanxu/wechat-mp</url>
+    <url>https://github.com/pannanxu/wechat-mp</url>
 
     <licenses>
         <license>
