@@ -1,4 +1,4 @@
-package io.mvvm.wechat.mp.manager.basic;
+package io.mvvm.wechat.mp.manager;
 
 import io.mvvm.wechat.mp.manager.IBaseBean;
 

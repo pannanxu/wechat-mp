@@ -20,4 +20,7 @@ public interface IAccessTokenManager extends IBaseBean {
         return null;
     };
 
+    default String refreshAccessToken(String appId) {
+        return null;
+    };
 }

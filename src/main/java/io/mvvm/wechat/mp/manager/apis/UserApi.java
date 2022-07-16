@@ -2,6 +2,8 @@ package io.mvvm.wechat.mp.manager.apis;
 
 import com.google.gson.JsonObject;
 import io.mvvm.wechat.mp.infra.Gsons;
+import io.mvvm.wechat.mp.manager.basic.IAccessTokenManager;
+import lombok.Getter;
 
 /**
  * @program: wechat-mp
@@ -13,13 +15,23 @@ import io.mvvm.wechat.mp.infra.Gsons;
  **/
 public class UserApi extends BaseApi {
 
-    protected Gsons.Helper requestCreateTag(String accessToken, String tagName) {
+    @Getter
+    private final IAccessTokenManager accessTokenManager;
+
+    public UserApi(IAccessTokenManager accessTokenManager) {
+        this.accessTokenManager = accessTokenManager;
+    }
+
+    protected Gsons.Helper requestCreateTag(String appId, String tagName) {
+        String accessToken = accessTokenManager.getAccessToken(appId);
+
         JsonObject object = new JsonObject();
         JsonObject tag = new JsonObject();
         tag.addProperty("name", tagName);
         object.add("tag", tag);
-        String response = post("/cgi-bin/tags/create?access_token=" + accessToken, object.toString()).getString();
-        return wrapper(response);
+        return requestWrapper(() -> post("/cgi-bin/tags/create", object.toString())
+                .setAppId(appId)
+                .addParam("access_token", accessToken));
     }
 
 }

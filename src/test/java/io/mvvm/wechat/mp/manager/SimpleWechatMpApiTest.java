@@ -2,7 +2,6 @@ package io.mvvm.wechat.mp.manager;
 
 import io.mvvm.wechat.mp.manager.basic.IAccessTokenManager;
 
-import io.mvvm.wechat.mp.manager.basic.IApiDomainManager;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -38,7 +37,7 @@ public class SimpleWechatMpApiTest {
     @Test
     public void createTag() {
         IUserManager userManager = api.getUserManager();
-        String tagId = userManager.createTag(appId, "wangwu");
+        String tagId = userManager.createTag(appId, "hello");
         System.out.println(tagId);
         assertNotNull(tagId);
     }

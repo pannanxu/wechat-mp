@@ -66,6 +66,14 @@ public abstract class BaseHttp<T> {
         return this.that();
     }
 
+    public T setAppId(String appId) {
+        return addHeader("appId", appId);
+    }
+
+    public String getAppId() {
+        return this.http.getFirstHeader("appId").getValue();
+    }
+
     public T ssl() {
         connectionManager = new BasicHttpClientConnectionManager(RegistryBuilder.<ConnectionSocketFactory>create().register("http", PlainConnectionSocketFactory.getSocketFactory()).register("https", SSLConnectionSocketFactory.getSocketFactory()).build(), null, null, null);
         return this.that();

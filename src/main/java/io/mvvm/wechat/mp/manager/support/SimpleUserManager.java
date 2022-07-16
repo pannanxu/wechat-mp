@@ -15,16 +15,14 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class SimpleUserManager extends UserApi implements IUserManager {
 
-    private final IAccessTokenManager accessTokenManager;
-
     public SimpleUserManager(IAccessTokenManager accessTokenManager) {
-        this.accessTokenManager = accessTokenManager;
+        super(accessTokenManager);
     }
 
     @Override
     public String createTag(String appId, String tagName) {
-        String accessToken = accessTokenManager.getAccessToken(appId);
-        Gsons.Helper helper = requestCreateTag(accessToken, tagName);
+        Gsons.Helper helper = requestCreateTag(appId, tagName);
         return helper.getAsString("tag", "id");
     }
+
 }

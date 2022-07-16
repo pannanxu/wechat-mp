@@ -24,7 +24,7 @@ public class SimpleAccessTokenManager extends BasicSupportApi implements IAccess
     @Override
     public String getAccessToken(String appId) {
         IConfig config = configManager.getConfig(appId);
-        return requestAccessToken(config).getAsString("access_token");
+        return requestAccessToken(config.getAppId(), config.getSecret()).getAsString("access_token");
     }
 
 }

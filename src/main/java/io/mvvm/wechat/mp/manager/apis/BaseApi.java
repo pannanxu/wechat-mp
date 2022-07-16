@@ -1,14 +1,19 @@
 package io.mvvm.wechat.mp.manager.apis;
 
 import com.google.common.base.Strings;
-import io.mvvm.wechat.mp.infra.Gsons;
+import io.mvvm.wechat.mp.infra.*;
 import io.mvvm.wechat.mp.infra.constant.ApiResponseConstant;
+import io.mvvm.wechat.mp.infra.http.BaseHttp;
 import io.mvvm.wechat.mp.infra.http.Gets;
 import io.mvvm.wechat.mp.infra.http.Posts;
+import io.mvvm.wechat.mp.manager.basic.IAccessTokenManager;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 
 /**
  * @program: wechat-mp
@@ -17,7 +22,7 @@ import java.util.Map;
  * @create: 2022-07-14 22:03
  **/
 @Slf4j
-public class BaseApi {
+public abstract class BaseApi {
 
     protected final String baseUrl = "https://api.weixin.qq.com";
 
@@ -37,17 +42,82 @@ public class BaseApi {
         return Posts.request(baseUrl + url, body.getBytes(StandardCharsets.UTF_8));
     }
 
+    /**
+     * 将请求包装一层, 提供了重试、requestId、刷新AccessToken 等功能
+     */
+    protected <T> Gsons.Helper requestWrapper(Supplier<BaseHttp<T>> supplier) {
+        String requestId = UUID.randomUUID().toString();
+        return retryHelper(() -> {
+            BaseHttp<T> http = supplier.get();
+            http.addHeader("requestId", requestId);
+            Gsons.Helper wrapper = wrapper(http.getString());
+            refreshAccessToken(http, wrapper);
+            return wrapper;
+        });
+    }
+
+    /**
+     * 包装响应的 json 方便操作
+     */
     protected Gsons.Helper wrapper(String json) {
         Gsons.Helper helper = Gsons.wrapper(Gsons.parse(json));
         String errCode = helper.getAsString(ApiResponseConstant.errCode);
         String errMsg = helper.getAsString(ApiResponseConstant.errMsg);
-        helper.setResult(true);
+        helper.setResult(!Strings.isNullOrEmpty(errCode) && !"0".equals(errCode));
         helper.setErrMsg(errMsg);
-        if (!Strings.isNullOrEmpty(errCode) && !"0".equals(errCode)) {
-            log.error("Failed to request api. code is '{}'. msg is '{}'", errCode, errMsg);
-            helper.setResult(false);
+        helper.setErrCode(errCode);
+        helper.setRetry(Globals.RETRY_CODES.contains(errCode));
+        helper.setRefreshAccessToken(Globals.REFRESH_ACCESS_TOKEN_CODES.contains(errCode));
+
+        if (helper.isResult()) {
+            if (!helper.isRetry() || !helper.isRefreshAccessToken()) {
+                throw new WechatException("异常错误: %s -> %s:%s", Globals.ReturnCode.getInstance(errCode).getDesc(), errCode, errMsg);
+            }
         }
         return helper;
     }
 
+    /**
+     * 子类重写此方法后提供一个 AccessToken 管理器
+     */
+    protected IAccessTokenManager getAccessTokenManager() {
+        throw new WechatException("不支持的刷新AccessToken");
+    }
+
+    /**
+     * 执行 AccessToken 刷新逻辑
+     */
+    private <T> void refreshAccessToken(BaseHttp<T> http, Gsons.Helper wrapper) {
+        if (wrapper.isRefreshAccessToken()) {
+            getAccessTokenManager().refreshAccessToken(http.getAppId());
+        }
+    }
+
+    /**
+     * 接口重试请求. 最大会进行3次的请求, 如果全部失败, 则会抛出异常
+     */
+    private Gsons.Helper retryHelper(Supplier<Gsons.Helper> supplier) {
+        int retryCount = 4;
+        AtomicInteger inc = new AtomicInteger(0);
+        do {
+            int i = inc.incrementAndGet();
+            Gsons.Helper wrapper = supplier.get();
+            if (!wrapper.isRetry()) {
+                return wrapper;
+            }
+            if (i < retryCount) {
+                log.info("ready for {}st retry.", i);
+                sleep(i);
+            }
+        } while (inc.get() < retryCount);
+        throw new RetryHelperException(Strings.lenientFormat("执行 %s 次后失败", inc.get()));
+    }
+
+    private void sleep(int i) {
+        try {
+            Thread.sleep(500L * i);
+        } catch (InterruptedException e) {
+            throw new WechatException("重试异常");
+        }
+    }
 }

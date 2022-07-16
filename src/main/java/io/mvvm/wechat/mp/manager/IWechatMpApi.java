@@ -2,7 +2,6 @@ package io.mvvm.wechat.mp.manager;
 
 import io.mvvm.wechat.mp.infra.IConfigManager;
 import io.mvvm.wechat.mp.manager.basic.IAccessTokenManager;
-import io.mvvm.wechat.mp.manager.basic.IApiDomainManager;
 
 /**
  * @program: wechat-mp

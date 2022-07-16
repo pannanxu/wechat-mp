@@ -31,9 +31,10 @@ public class GuavaCacheAccessTokenManager extends SimpleAccessTokenManager imple
         return cache.getUnchecked(appId);
     }
 
-    public String refreshAccessToken(String key) {
-        log.info("Ready to refresh the accessToken of {}.", key);
-        return super.getAccessToken(key);
+    @Override
+    public String refreshAccessToken(String appId) {
+        log.info("Ready to refresh the accessToken of {}.", appId);
+        return super.getAccessToken(appId);
     }
 
 }

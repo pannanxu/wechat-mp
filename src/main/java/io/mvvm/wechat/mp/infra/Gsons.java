@@ -78,10 +78,19 @@ public final class Gsons {
 
         @Setter
         @Getter
+        private boolean retry;
+        @Setter
+        @Getter
+        private boolean refreshAccessToken;
+        @Setter
+        @Getter
         private boolean result;
         @Setter
         @Getter
         private String  errMsg;
+        @Setter
+        @Getter
+        private String  errCode;
 
         public Helper(JsonObject json) {
             if (json == null) {
