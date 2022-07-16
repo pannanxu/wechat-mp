@@ -52,7 +52,7 @@ public abstract class BaseApi {
             http.addHeader("requestId", requestId);
             GsonWrapper wrapper = wrapper(http.getString());
             refreshAccessToken(http, wrapper);
-            return wrapper;
+            return ValueWrappers.of(http, wrapper);
         });
     }
 
@@ -96,12 +96,15 @@ public abstract class BaseApi {
     /**
      * 接口重试请求. 最大会进行3次的请求, 如果全部失败, 则会抛出异常
      */
-    private GsonWrapper retryHelper(Supplier<GsonWrapper> supplier) {
+    private <T> GsonWrapper retryHelper(Supplier<ValueWrappers.Value2<BaseHttp<T>, GsonWrapper>> supplier) {
+        BaseHttp<T> http = null;
         int retryCount = 4;
         AtomicInteger inc = new AtomicInteger(0);
         do {
             int i = inc.incrementAndGet();
-            GsonWrapper wrapper = supplier.get();
+            ValueWrappers.Value2<BaseHttp<T>, GsonWrapper> value = supplier.get();
+            http = value.getT1();
+            GsonWrapper wrapper = value.getT2();
             if (!wrapper.isRetry()) {
                 return wrapper;
             }
@@ -110,7 +113,7 @@ public abstract class BaseApi {
                 sleep(i);
             }
         } while (inc.get() < retryCount);
-        throw new RetryHelperException(Strings.lenientFormat("执行 %s 次后失败", inc.get()));
+        throw new RetryHelperException(Strings.lenientFormat("执行 %s 次接口后失败 [%s]", inc.get(), http.getUri()));
     }
 
     private void sleep(int i) {

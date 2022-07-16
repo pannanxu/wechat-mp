@@ -143,6 +143,10 @@ public abstract class BaseHttp<T> {
         }
     }
 
+    public String getUri() {
+        return this.http.getURI().toString();
+    }
+
     private BasicHttpClientConnectionManager buildConnManager(String pwd, InputStream certStream) throws Exception {
         char[] password = pwd.toCharArray();
         KeyStore ks = KeyStore.getInstance("PKCS12");

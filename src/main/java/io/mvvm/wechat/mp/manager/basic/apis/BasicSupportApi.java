@@ -16,8 +16,6 @@ import lombok.extern.slf4j.Slf4j;
 public class BasicSupportApi extends BaseApi {
 
     protected GsonWrapper requestAccessToken(String appId, String secret) {
-        //        String response = "{\"access_token\":\"58_UdwoPX9nhWovrJdUfNCKsDNqQD-eJMCC8EB_qK_Lo222ZC0v3iA9dI8k_hCbGzZviKIQ5pTdMyspDutEzQE0chAogBQJmmM7pnbmG57rpkbcDmgnTz1a01ytzk3sRbVS0FGSbo9YuHIqsaUzNFGgAAAVNO\",\"expires_in\":7200}";
-        //        return wrapper(response);
         return requestWrapper(() -> get("/cgi-bin/token")
                 .setAppId(appId)
                 .addParam("grant_type", "client_credential")
