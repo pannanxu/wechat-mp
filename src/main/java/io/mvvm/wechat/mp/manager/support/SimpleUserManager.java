@@ -1,6 +1,6 @@
 package io.mvvm.wechat.mp.manager.support;
 
-import io.mvvm.wechat.mp.infra.Gsons;
+import io.mvvm.wechat.mp.infra.GsonWrapper;
 import io.mvvm.wechat.mp.manager.IUserManager;
 import io.mvvm.wechat.mp.manager.apis.UserApi;
 import io.mvvm.wechat.mp.manager.basic.IAccessTokenManager;
@@ -21,7 +21,7 @@ public class SimpleUserManager extends UserApi implements IUserManager {
 
     @Override
     public String createTag(String appId, String tagName) {
-        Gsons.Helper helper = requestCreateTag(appId, tagName);
+        GsonWrapper helper = requestCreateTag(appId, tagName);
         return helper.getAsString("tag", "id");
     }
 

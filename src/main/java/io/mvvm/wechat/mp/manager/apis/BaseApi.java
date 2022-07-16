@@ -45,12 +45,12 @@ public abstract class BaseApi {
     /**
      * 将请求包装一层, 提供了重试、requestId、刷新AccessToken 等功能
      */
-    protected <T> Gsons.Helper requestWrapper(Supplier<BaseHttp<T>> supplier) {
+    protected <T> GsonWrapper requestWrapper(Supplier<BaseHttp<T>> supplier) {
         String requestId = UUID.randomUUID().toString();
         return retryHelper(() -> {
             BaseHttp<T> http = supplier.get();
             http.addHeader("requestId", requestId);
-            Gsons.Helper wrapper = wrapper(http.getString());
+            GsonWrapper wrapper = wrapper(http.getString());
             refreshAccessToken(http, wrapper);
             return wrapper;
         });
@@ -59,8 +59,8 @@ public abstract class BaseApi {
     /**
      * 包装响应的 json 方便操作
      */
-    protected Gsons.Helper wrapper(String json) {
-        Gsons.Helper helper = Gsons.wrapper(Gsons.parse(json));
+    protected GsonWrapper wrapper(String json) {
+        GsonWrapper helper = GsonWrapper.of(json);
         String errCode = helper.getAsString(ApiResponseConstant.errCode);
         String errMsg = helper.getAsString(ApiResponseConstant.errMsg);
         helper.setResult(!Strings.isNullOrEmpty(errCode) && !"0".equals(errCode));
@@ -87,7 +87,7 @@ public abstract class BaseApi {
     /**
      * 执行 AccessToken 刷新逻辑
      */
-    private <T> void refreshAccessToken(BaseHttp<T> http, Gsons.Helper wrapper) {
+    private <T> void refreshAccessToken(BaseHttp<T> http, GsonWrapper wrapper) {
         if (wrapper.isRefreshAccessToken()) {
             getAccessTokenManager().refreshAccessToken(http.getAppId());
         }
@@ -96,12 +96,12 @@ public abstract class BaseApi {
     /**
      * 接口重试请求. 最大会进行3次的请求, 如果全部失败, 则会抛出异常
      */
-    private Gsons.Helper retryHelper(Supplier<Gsons.Helper> supplier) {
+    private GsonWrapper retryHelper(Supplier<GsonWrapper> supplier) {
         int retryCount = 4;
         AtomicInteger inc = new AtomicInteger(0);
         do {
             int i = inc.incrementAndGet();
-            Gsons.Helper wrapper = supplier.get();
+            GsonWrapper wrapper = supplier.get();
             if (!wrapper.isRetry()) {
                 return wrapper;
             }
