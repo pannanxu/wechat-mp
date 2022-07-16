@@ -20,7 +20,7 @@ public class GuavaCacheAccessTokenManager extends SimpleAccessTokenManager imple
 
     private final LoadingCache<String, String> cache = CacheBuilder.newBuilder()
             .expireAfterWrite((int) (7200 / 1.2), TimeUnit.SECONDS)
-            .build(CacheLoader.from(this::refreshAccessToken));
+            .build(CacheLoader.from(this::refresh));
 
     public GuavaCacheAccessTokenManager(IConfigManager configManager) {
         super(configManager);
@@ -33,6 +33,11 @@ public class GuavaCacheAccessTokenManager extends SimpleAccessTokenManager imple
 
     @Override
     public String refreshAccessToken(String appId) {
+        cache.refresh(appId);
+        return getAccessToken(appId);
+    }
+
+    public String refresh(String appId) {
         log.info("Ready to refresh the accessToken of {}.", appId);
         return super.getAccessToken(appId);
     }
