@@ -4,15 +4,14 @@ import com.google.common.base.Verify;
 import com.google.common.reflect.MutableTypeToInstanceMap;
 import io.mvvm.wechat.mp.infra.IConfigManager;
 import io.mvvm.wechat.mp.infra.SimpleConfigManager;
+import io.mvvm.wechat.mp.infra.WechatException;
 import io.mvvm.wechat.mp.manager.basic.IAccessTokenManager;
 import io.mvvm.wechat.mp.manager.basic.support.GuavaCacheAccessTokenManager;
 import io.mvvm.wechat.mp.manager.support.SimpleApiDomainManager;
 import io.mvvm.wechat.mp.manager.support.SimpleMaterialManager;
 import io.mvvm.wechat.mp.manager.support.SimpleUserManager;
 
-import javax.annotation.Resource;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 
 /**
@@ -23,30 +22,39 @@ import java.lang.reflect.InvocationTargetException;
  **/
 public class SimpleWechatMpApi implements IWechatMpApi {
 
-    private final MutableTypeToInstanceMap<Object> mutableTypeToInstanceMap = new MutableTypeToInstanceMap<>();
+    protected final MutableTypeToInstanceMap<Object> container = new MutableTypeToInstanceMap<>();
 
     public SimpleWechatMpApi() {
-        mutableTypeToInstanceMap.putInstance(IConfigManager.class,
-                                             lazyNewInstance(IConfigManager.class, SimpleConfigManager.class));
-        mutableTypeToInstanceMap.putInstance(IAccessTokenManager.class,
-                                             lazyNewInstance(IAccessTokenManager.class, GuavaCacheAccessTokenManager.class));
-        mutableTypeToInstanceMap.putInstance(IApiDomainManager.class,
-                                             lazyNewInstance(IApiDomainManager.class, SimpleApiDomainManager.class));
+        newConfigManager();
+        newAccessTokenManger();
+        newApiDomainManager();
+    }
+
+    protected void newConfigManager() {
+        lazyNewInstance(IConfigManager.class, SimpleConfigManager.class);
+    }
+
+    protected void newAccessTokenManger() {
+        lazyNewInstance(IAccessTokenManager.class, GuavaCacheAccessTokenManager.class);
+    }
+
+    protected void newApiDomainManager() {
+        lazyNewInstance(IApiDomainManager.class, SimpleApiDomainManager.class);
     }
 
     @Override
     public IConfigManager getConfigManager() {
-        return mutableTypeToInstanceMap.getInstance(IConfigManager.class);
+        return container.getInstance(IConfigManager.class);
     }
 
     @Override
     public IAccessTokenManager getAccessTokenManager() {
-        return mutableTypeToInstanceMap.getInstance(IAccessTokenManager.class);
+        return container.getInstance(IAccessTokenManager.class);
     }
 
     @Override
     public IApiDomainManager getApiDomainManager() {
-        return mutableTypeToInstanceMap.getInstance(IApiDomainManager.class);
+        return container.getInstance(IApiDomainManager.class);
     }
 
     @Override
@@ -66,16 +74,14 @@ public class SimpleWechatMpApi implements IWechatMpApi {
      * @param impl 接口的实现
      * @return instance
      */
-    private <API, IMPL extends API> API lazyNewInstance(Class<API> api, Class<IMPL> impl) {
-        API instance = mutableTypeToInstanceMap.getInstance(impl);
+    protected <API, IMPL extends API> API lazyNewInstance(Class<API> api, Class<IMPL> impl) {
+        API instance = container.getInstance(impl);
         if (null == instance) {
             synchronized (SimpleWechatMpApi.class) {
-                instance = mutableTypeToInstanceMap.getInstance(impl);
+                instance = container.getInstance(api);
                 if (null == instance) {
                     instance = newInstance(impl);
-                    mutableTypeToInstanceMap.putInstance(api, instance);
-                } else {
-                    instance = mutableTypeToInstanceMap.getInstance(api);
+                    container.putInstance(api, instance);
                 }
             }
         }
@@ -102,7 +108,7 @@ public class SimpleWechatMpApi implements IWechatMpApi {
             try {
                 instance = clazz.newInstance();
             } catch (InstantiationException | IllegalAccessException e) {
-                throw new RuntimeException("创建Bean异常", e);
+                throw new WechatException("创建Bean异常", e);
             }
         } else {
             Constructor<?> constructor = constructors[0]; // 多个构造方法时默认取第一个去创建对象
@@ -110,7 +116,7 @@ public class SimpleWechatMpApi implements IWechatMpApi {
             try {
                 instance = (T) constructor.newInstance(args);
             } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
-                throw new RuntimeException("创建Bean异常", e);
+                throw new WechatException("创建Bean异常", e);
             }
         }
 
@@ -118,32 +124,11 @@ public class SimpleWechatMpApi implements IWechatMpApi {
         return instance;
     }
 
-
-    private <T> T autoInject(T obj) {
-        Class<?> clazz = obj.getClass();
-        Field[] fields = clazz.getDeclaredFields();
-        for (Field field : fields) {
-            Resource resource = field.getAnnotation(Resource.class);
-            if (null == resource) {
-                continue;
-            }
-            field.setAccessible(true);
-            try {
-                Object instance = mutableTypeToInstanceMap.getInstance(field.getType());
-                Verify.verifyNotNull(instance, "no handler for {}.", field.getType());
-                field.set(obj, instance);
-            } catch (IllegalAccessException e) {
-                throw new RuntimeException("注入Bean异常", e);
-            }
-        }
-        return obj;
-    }
-
     private Object[] getParameterValues(Constructor<?> constructor) {
         Class<?>[] parameterTypes = constructor.getParameterTypes();
         Object[] args = new Object[parameterTypes.length];
         for (int i = 0; i < args.length; i++) {
-            args[i] = mutableTypeToInstanceMap.getInstance(parameterTypes[i]);
+            args[i] = container.getInstance(parameterTypes[i]);
         }
         return args;
     }
