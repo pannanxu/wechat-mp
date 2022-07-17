@@ -104,20 +104,12 @@ public class SimpleWechatMpApi implements IWechatMpApi {
         Constructor<?>[] constructors = clazz.getDeclaredConstructors();
         T instance = null;
 
-        if (constructors.length == 0) {
-            try {
-                instance = clazz.newInstance();
-            } catch (InstantiationException | IllegalAccessException e) {
-                throw new WechatException("创建Bean异常", e);
-            }
-        } else {
-            Constructor<?> constructor = constructors[0]; // 多个构造方法时默认取第一个去创建对象
-            Object[] args = getParameterValues(constructor);
-            try {
-                instance = (T) constructor.newInstance(args);
-            } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
-                throw new WechatException("创建Bean异常", e);
-            }
+        Constructor<?> constructor = constructors[0]; // 多个构造方法时默认取第一个去创建对象
+        Object[] args = getParameterValues(constructor);
+        try {
+            instance = (T) constructor.newInstance(args);
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+            throw new WechatException("创建Bean异常", e);
         }
 
         Verify.verifyNotNull(instance);
