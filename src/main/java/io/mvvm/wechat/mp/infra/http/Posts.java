@@ -2,7 +2,6 @@ package io.mvvm.wechat.mp.infra.http;
 
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ByteArrayEntity;
-import org.apache.http.entity.StringEntity;
 
 import java.util.Map;
 

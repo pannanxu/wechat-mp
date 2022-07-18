@@ -94,12 +94,12 @@ public abstract class BaseHttp<T> {
 
     public String getString() {
         resetURI();
-        log.info("The api of this request is '{}'.", http.getURI().toString());
+        log.debug("The api of this request is '{}'.", http.getURI().toString());
         try (CloseableHttpClient client = HttpClientBuilder.create().setConnectionManager(connectionManager).build()) {
             CloseableHttpResponse response = client.execute(this.http);
             HttpEntity entity = response.getEntity();
             String result = EntityUtils.toString(entity, "UTF-8");
-            log.info("The result of the request is '{}'.", result);
+            log.debug("The result of the request is '{}'.", result);
             return result;
         } catch (IOException e) {
             e.printStackTrace();
@@ -109,7 +109,7 @@ public abstract class BaseHttp<T> {
 
     public InputStream getContent() {
         resetURI();
-        log.info("The api of this request is '{}'", http.getURI().toString());
+        log.debug("The api of this request is '{}'", http.getURI().toString());
         try (CloseableHttpClient client = HttpClientBuilder.create().setConnectionManager(connectionManager).build()) {
             CloseableHttpResponse response = client.execute(this.http);
             HttpEntity entity = response.getEntity();

@@ -38,7 +38,7 @@ public class GuavaCacheAccessTokenManager extends SimpleAccessTokenManager imple
     }
 
     public String refresh(String appId) {
-        log.info("Ready to refresh the accessToken of {}.", appId);
+        log.debug("Ready to refresh the accessToken of {}.", appId);
         return super.getAccessToken(appId);
     }
 

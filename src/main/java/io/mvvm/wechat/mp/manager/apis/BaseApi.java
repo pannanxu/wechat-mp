@@ -109,7 +109,7 @@ public abstract class BaseApi {
                 return wrapper;
             }
             if (i < retryCount) {
-                log.info("ready for {}st retry.", i);
+                log.debug("ready for {}st retry.", i);
                 sleep(i);
             }
         } while (inc.get() < retryCount);
