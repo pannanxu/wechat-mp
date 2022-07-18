@@ -1,9 +1,6 @@
 package io.mvvm.wechat.mp.manager.apis;
 
 import io.mvvm.wechat.mp.infra.GsonWrapper;
-import io.mvvm.wechat.mp.infra.Gsons;
-import io.mvvm.wechat.mp.manager.basic.IAccessTokenManager;
-import lombok.Getter;
 
 /**
  * @program: wechat-mp
@@ -13,16 +10,9 @@ import lombok.Getter;
  **/
 public class ApiDomainApi extends BaseApi {
 
-    @Getter
-    private final IAccessTokenManager accessTokenManager;
-
-    public ApiDomainApi(IAccessTokenManager accessTokenManager) {
-        this.accessTokenManager = accessTokenManager;
-    }
-
     // 获取微信服务器IP地址
     public GsonWrapper requestGetApiDomainIp(String appId) {
-        String accessToken = accessTokenManager.getAccessToken(appId);
+        String accessToken = getAccessToken(appId);
         return requestWrapper(() -> get("/cgi-bin/get_api_domain_ip")
                 .addParam("access_token", accessToken));
     }

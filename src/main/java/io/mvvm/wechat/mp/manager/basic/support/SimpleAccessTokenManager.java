@@ -3,6 +3,7 @@ package io.mvvm.wechat.mp.manager.basic.support;
 import io.mvvm.wechat.mp.infra.IConfig;
 import io.mvvm.wechat.mp.manager.IConfigManager;
 import io.mvvm.wechat.mp.manager.basic.IAccessTokenManager;
+import io.mvvm.wechat.mp.manager.basic.apis.BasicSupportApi;
 import io.mvvm.wechat.mp.manager.basic.apis.MockBasicSupportApi;
 import lombok.extern.slf4j.Slf4j;
 
@@ -13,7 +14,7 @@ import lombok.extern.slf4j.Slf4j;
  * @create: 2022-07-14 20:42
  **/
 @Slf4j
-public class SimpleAccessTokenManager extends MockBasicSupportApi implements IAccessTokenManager {
+public class SimpleAccessTokenManager extends BasicSupportApi implements IAccessTokenManager {
 
     private final IConfigManager configManager;
 

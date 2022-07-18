@@ -1,7 +1,7 @@
 package io.mvvm.wechat.mp.manager.basic.apis;
 
 import io.mvvm.wechat.mp.infra.GsonWrapper;
-import io.mvvm.wechat.mp.manager.apis.BaseApi;
+import io.mvvm.wechat.mp.manager.apis.AbstractBaseApi;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -13,7 +13,7 @@ import lombok.extern.slf4j.Slf4j;
  * @create: 2022-07-14 20:26
  **/
 @Slf4j
-public class BasicSupportApi extends BaseApi {
+public class BasicSupportApi extends AbstractBaseApi {
 
     protected GsonWrapper requestAccessToken(String appId, String secret) {
         return requestWrapper(() -> get("/cgi-bin/token")

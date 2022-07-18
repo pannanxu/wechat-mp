@@ -2,6 +2,9 @@ package io.mvvm.wechat.mp.infra;
 
 import lombok.extern.slf4j.Slf4j;
 
+import java.beans.BeanInfo;
+import java.beans.Introspector;
+import java.beans.PropertyDescriptor;
 import java.lang.reflect.Constructor;
 import java.util.Optional;
 
@@ -55,6 +58,28 @@ public class Reflections {
 
     public static <T> Constructor<?> getDefaultConstructor(Class<T> clazz) {
         return clazz.getDeclaredConstructors()[0];
+    }
+
+    /**
+     * 执行 setter 方法
+     *
+     * @param target object
+     * @param type   属性类型
+     * @param args   方法参数
+     */
+    public static void invokeSetterMethod(Object target, Class<?> type, Object... args) {
+        Class<?> clazz = target.getClass();
+        try {
+            BeanInfo beanInfo = Introspector.getBeanInfo(clazz);
+            PropertyDescriptor[] descriptors = beanInfo.getPropertyDescriptors();
+            for (PropertyDescriptor descriptor : descriptors) {
+                if (descriptor.getPropertyType().equals(type)) {
+                    descriptor.getWriteMethod().invoke(target, args);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 }

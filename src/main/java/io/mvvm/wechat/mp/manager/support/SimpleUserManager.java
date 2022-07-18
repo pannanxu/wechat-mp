@@ -15,10 +15,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class SimpleUserManager extends UserApi implements IUserManager {
 
-    public SimpleUserManager(IAccessTokenManager accessTokenManager) {
-        super(accessTokenManager);
-    }
-
     @Override
     public String createTag(String appId, String tagName) {
         GsonWrapper helper = requestCreateTag(appId, tagName);

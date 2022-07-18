@@ -77,11 +77,19 @@ public class SimpleWechatMpApi implements IWechatMpApi {
                 instance = container.getInstance(api);
                 if (null == instance) {
                     instance = newInstance(impl);
+                    autoInjectAccessTokenManager(instance);
                     container.putInstance(api, instance);
                 }
             }
         }
         return instance;
+    }
+
+    /**
+     * 自动通过setter方法注入 AccessTokenManager 对象
+     */
+    private <API> void autoInjectAccessTokenManager(API api) {
+        Reflections.invokeSetterMethod(api, IAccessTokenManager.class, getAccessTokenManager());
     }
 
     private <T> T newInstance(Class<T> clazz) {
