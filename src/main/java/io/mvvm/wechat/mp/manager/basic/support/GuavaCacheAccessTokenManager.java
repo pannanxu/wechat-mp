@@ -3,7 +3,7 @@ package io.mvvm.wechat.mp.manager.basic.support;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import io.mvvm.wechat.mp.infra.IConfigManager;
+import io.mvvm.wechat.mp.manager.IConfigManager;
 import io.mvvm.wechat.mp.manager.basic.IAccessTokenManager;
 import lombok.extern.slf4j.Slf4j;
 

@@ -1,6 +1,8 @@
-package io.mvvm.wechat.mp.infra;
+package io.mvvm.wechat.mp.manager.support;
 
 import com.google.common.io.Resources;
+import io.mvvm.wechat.mp.infra.IConfig;
+import io.mvvm.wechat.mp.manager.IConfigManager;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.FileInputStream;

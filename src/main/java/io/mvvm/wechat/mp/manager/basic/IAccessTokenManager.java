@@ -1,14 +1,12 @@
 package io.mvvm.wechat.mp.manager.basic;
 
-import io.mvvm.wechat.mp.manager.IBaseBean;
-
 /**
  * @program: wechat-mp
  * @description: 获取 AccessToken
  * @author: Pan
  * @create: 2022-07-14 20:59
  **/
-public interface IAccessTokenManager extends IBaseBean {
+public interface IAccessTokenManager {
     /**
      * 获取 AccessToken
      *
@@ -18,9 +16,10 @@ public interface IAccessTokenManager extends IBaseBean {
      */
     default String getAccessToken(String appId) {
         return null;
-    };
+    }
 
     default String refreshAccessToken(String appId) {
         return null;
-    };
+    }
+
 }

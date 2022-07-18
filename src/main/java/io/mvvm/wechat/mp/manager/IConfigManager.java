@@ -1,6 +1,6 @@
-package io.mvvm.wechat.mp.infra;
+package io.mvvm.wechat.mp.manager;
 
-import io.mvvm.wechat.mp.manager.IBaseBean;
+import io.mvvm.wechat.mp.infra.IConfig;
 
 /**
  * @program: wechat-mp
@@ -8,7 +8,7 @@ import io.mvvm.wechat.mp.manager.IBaseBean;
  * @author: Pan
  * @create: 2022-07-15 22:25
  **/
-public interface IConfigManager extends IBaseBean {
+public interface IConfigManager {
 
 
     IConfig getConfig(String appId);
