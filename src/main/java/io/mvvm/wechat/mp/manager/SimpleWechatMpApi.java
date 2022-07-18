@@ -1,6 +1,5 @@
 package io.mvvm.wechat.mp.manager;
 
-import com.google.common.base.Verify;
 import com.google.common.reflect.MutableTypeToInstanceMap;
 import io.mvvm.wechat.mp.infra.IConfigManager;
 import io.mvvm.wechat.mp.infra.Reflections;
@@ -11,8 +10,6 @@ import io.mvvm.wechat.mp.manager.basic.support.GuavaCacheAccessTokenManager;
 import io.mvvm.wechat.mp.manager.support.SimpleApiDomainManager;
 import io.mvvm.wechat.mp.manager.support.SimpleMaterialManager;
 import io.mvvm.wechat.mp.manager.support.SimpleUserManager;
-
-import java.util.Optional;
 
 /**
  * @program: wechat-mp
