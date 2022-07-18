@@ -3,6 +3,7 @@ package io.mvvm.wechat.mp.manager;
 import com.google.common.base.Verify;
 import com.google.common.reflect.MutableTypeToInstanceMap;
 import io.mvvm.wechat.mp.infra.IConfigManager;
+import io.mvvm.wechat.mp.infra.Reflections;
 import io.mvvm.wechat.mp.infra.SimpleConfigManager;
 import io.mvvm.wechat.mp.infra.WechatException;
 import io.mvvm.wechat.mp.manager.basic.IAccessTokenManager;
@@ -10,9 +11,6 @@ import io.mvvm.wechat.mp.manager.basic.support.GuavaCacheAccessTokenManager;
 import io.mvvm.wechat.mp.manager.support.SimpleApiDomainManager;
 import io.mvvm.wechat.mp.manager.support.SimpleMaterialManager;
 import io.mvvm.wechat.mp.manager.support.SimpleUserManager;
-
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 
 /**
  * @program: wechat-mp
@@ -89,39 +87,18 @@ public class SimpleWechatMpApi implements IWechatMpApi {
         return instance;
     }
 
-    /**
-     * 创建对象实例
-     * <p>
-     * 在有多个构造方法时，默认采用第一个构造器
-     * <p>
-     * 构造器所需要的对象在 bean 容器中被管理的情况下会自动将对象注入
-     *
-     * @param clazz 需要创建对象的class
-     * @return 对象的实例
-     */
-    @SuppressWarnings("unchecked")
     private <T> T newInstance(Class<T> clazz) {
-        Constructor<?>[] constructors = clazz.getDeclaredConstructors();
-        T instance = null;
-
-        Constructor<?> constructor = constructors[0]; // 多个构造方法时默认取第一个去创建对象
-        Object[] args = getParameterValues(constructor);
-        try {
-            instance = (T) constructor.newInstance(args);
-        } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
-            throw new WechatException("创建Bean异常", e);
-        }
-
-        Verify.verifyNotNull(instance);
-        return instance;
+        Object[] parameterValues = getParameterValues(clazz);
+        return Reflections.newInstance(clazz, parameterValues)
+                .orElseThrow(() -> new WechatException("Failed to create %s instance.", clazz));
     }
 
-    private Object[] getParameterValues(Constructor<?> constructor) {
-        Class<?>[] parameterTypes = constructor.getParameterTypes();
-        Object[] args = new Object[parameterTypes.length];
-        for (int i = 0; i < args.length; i++) {
-            args[i] = container.getInstance(parameterTypes[i]);
+    private <T> Object[] getParameterValues(Class<T> clazz) {
+        Class<?>[] parameterTypes = Reflections.getDefaultParameterTypes(clazz);
+        Object[] parameterValues = new Object[parameterTypes.length];
+        for (int i = 0; i < parameterValues.length; i++) {
+            parameterValues[i] = container.getInstance(parameterTypes[i]);
         }
-        return args;
+        return parameterValues;
     }
 }
