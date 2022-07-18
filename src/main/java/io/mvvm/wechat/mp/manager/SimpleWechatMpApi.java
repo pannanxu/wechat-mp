@@ -12,6 +12,8 @@ import io.mvvm.wechat.mp.manager.support.SimpleApiDomainManager;
 import io.mvvm.wechat.mp.manager.support.SimpleMaterialManager;
 import io.mvvm.wechat.mp.manager.support.SimpleUserManager;
 
+import java.util.Optional;
+
 /**
  * @program: wechat-mp
  * @description: 简单的 Ioc 注入管理。需手动处理注入顺序，否则会找不到依赖
@@ -83,7 +85,6 @@ public class SimpleWechatMpApi implements IWechatMpApi {
                 }
             }
         }
-        Verify.verifyNotNull(instance);
         return instance;
     }
 
