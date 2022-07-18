@@ -18,12 +18,6 @@ public class SelfMenuInfo extends Menu {
     @SerializedName("selfmenu_info")
     private Info    info;
 
-    public static void main(String[] args) {
-
-        String to = CaseFormat.LOWER_HYPHEN.to(CaseFormat.UPPER_CAMEL, "a-b-c");
-        System.out.println(to);
-    }
-
     public static class Info {
 
         private List<Button> button;
