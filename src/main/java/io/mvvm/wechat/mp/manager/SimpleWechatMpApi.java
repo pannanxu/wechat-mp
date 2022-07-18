@@ -72,7 +72,7 @@ public class SimpleWechatMpApi implements IWechatMpApi {
      * @return instance
      */
     protected <API, IMPL extends API> API lazyNewInstance(Class<API> api, Class<IMPL> impl) {
-        API instance = container.getInstance(impl);
+        API instance = container.getInstance(api);
         if (null == instance) {
             synchronized (SimpleWechatMpApi.class) {
                 instance = container.getInstance(api);
