@@ -14,6 +14,7 @@ public class ApiDomainApi extends BaseApi {
     public GsonWrapper requestGetApiDomainIp(String appId) {
         String accessToken = getAccessToken(appId);
         return requestWrapper(() -> get("/cgi-bin/get_api_domain_ip")
+                .setAppId(appId)
                 .addParam("access_token", accessToken));
     }
 
