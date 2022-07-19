@@ -1,6 +1,8 @@
 package io.mvvm.wechat.mp.manager.apis;
 
+import io.mvvm.wechat.mp.infra.IConfig;
 import io.mvvm.wechat.mp.infra.WechatException;
+import io.mvvm.wechat.mp.manager.IConfigManager;
 import io.mvvm.wechat.mp.manager.basic.IAccessTokenManager;
 import lombok.Setter;
 
@@ -14,6 +16,8 @@ public class BaseApi extends AbstractBaseApi {
 
     @Setter
     private IAccessTokenManager accessTokenManager;
+    @Setter
+    private IConfigManager      configManager;
 
     @Override
     protected void refreshAccessTokenApi(String appId) {
@@ -31,4 +35,14 @@ public class BaseApi extends AbstractBaseApi {
         return accessTokenManager;
     }
 
+    public IConfig getConfig(String appId) {
+        return getConfigManager().getConfig(appId);
+    }
+
+    public IConfigManager getConfigManager() {
+        if (null == configManager) {
+            throw new WechatException("configManager is null.");
+        }
+        return configManager;
+    }
 }
