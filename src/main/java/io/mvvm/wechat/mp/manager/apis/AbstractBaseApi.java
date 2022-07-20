@@ -10,8 +10,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
 /**
@@ -42,18 +40,18 @@ public abstract class AbstractBaseApi {
     }
 
     /**
-     * 将请求包装一层, 提供了重试、requestId、刷新AccessToken 等功能
+     * 将请求包装一层, 提供了重试、刷新AccessToken 等功能
      */
     protected <T> GsonWrapper requestWrapper(Supplier<BaseHttp<T, ?>> supplier) {
-        String requestId = UUID.randomUUID().toString();
-        return retryHelper(() -> {
-            BaseHttp<T, ?> http = supplier.get();
-            http.addHeader("requestId", requestId);
-            GsonWrapper wrapper = wrapper(http.getString());
+        BaseHttp<T, ?> http = supplier.get();
+        return http.getStringRetryHelper(response -> {
+            GsonWrapper wrapper = wrapper(response);
             if (wrapper.isRefreshAccessToken()) {
                 refreshAccessTokenApi(http.getAppId());
             }
-            return ValueWrappers.of(http, wrapper);
+            return http.buildMoreRetryParam(wrapper.isRetry(), wrapper);
+        }, () -> {
+            throw new RetryHelperException(Strings.lenientFormat("重试多次接口后失败 [%s]", http.getUri()));
         });
     }
 
@@ -81,37 +79,7 @@ public abstract class AbstractBaseApi {
     /**
      * 执行 AccessToken 刷新逻辑
      */
-    protected  void refreshAccessTokenApi(String appId) {
+    protected void refreshAccessTokenApi(String appId) {
     }
 
-    /**
-     * 接口重试请求. 最大会进行3次的请求, 如果全部失败, 则会抛出异常
-     */
-    private <T> GsonWrapper retryHelper(Supplier<ValueWrappers.Value2<BaseHttp<T, ?>, GsonWrapper>> supplier) {
-        BaseHttp<T, ?> http = null;
-        int retryCount = 4;
-        AtomicInteger inc = new AtomicInteger(0);
-        do {
-            int i = inc.incrementAndGet();
-            ValueWrappers.Value2<BaseHttp<T, ?>, GsonWrapper> value = supplier.get();
-            http = value.getT1();
-            GsonWrapper wrapper = value.getT2();
-            if (!wrapper.isRetry()) {
-                return wrapper;
-            }
-            if (i < retryCount) {
-                log.debug("ready for {}st retry.", i);
-                sleep(i);
-            }
-        } while (inc.get() < retryCount);
-        throw new RetryHelperException(Strings.lenientFormat("执行 %s 次接口后失败 [%s]", inc.get(), http.getUri()));
-    }
-
-    private void sleep(int i) {
-        try {
-            Thread.sleep(500L * i);
-        } catch (InterruptedException e) {
-            throw new WechatException("重试异常");
-        }
-    }
 }

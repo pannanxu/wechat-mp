@@ -25,6 +25,9 @@ import java.security.KeyStore;
 import java.security.SecureRandom;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * @program: wechat-mp
@@ -94,12 +97,15 @@ public abstract class BaseHttp<T, H extends HttpRequestBase> {
 
     public String getString() {
         resetURI();
-        log.debug("The api of this request is '{}'.", http.getURI().toString());
         try (CloseableHttpClient client = HttpClientBuilder.create().setConnectionManager(connectionManager).build()) {
             CloseableHttpResponse response = client.execute(this.http);
             HttpEntity entity = response.getEntity();
             String result = EntityUtils.toString(entity, "UTF-8");
-            log.debug("The result of the request is '{}'.", result);
+            log.debug("\n" +
+                            "开始请求API: '{}' \n" +
+                            "QueryParams: '{}' \n" +
+                            "ResponseBody: '{}'",
+                    http.getURI().getPath(), http.getURI().getQuery(), result);
             return result;
         } catch (IOException e) {
             e.printStackTrace();
@@ -113,11 +119,43 @@ public abstract class BaseHttp<T, H extends HttpRequestBase> {
         try (CloseableHttpClient client = HttpClientBuilder.create().setConnectionManager(connectionManager).build()) {
             CloseableHttpResponse response = client.execute(this.http);
             HttpEntity entity = response.getEntity();
+            log.debug("\n" +
+                    "开始请求API: '{}' \n" +
+                    "QueryParams: '{}' \n" +
+                    http.getURI().getPath(), http.getURI().getQuery());
             return entity.getContent();
         } catch (IOException e) {
             e.printStackTrace();
         }
         return null;
+    }
+
+    /**
+     * 接口重试请求. 最大会进行3次的请求
+     *
+     * @param fn        解析结果, 并告知是否需要进行重试,
+     * @param retryFail 多次重试失败后执行的回调
+     */
+    public <MR> MR getStringRetryHelper(Function<String, MoreRetryParam<MR>> fn, Supplier<MR> retryFail) {
+        int retryCount = 4;
+        AtomicInteger inc = new AtomicInteger(0);
+        do {
+            int i = inc.incrementAndGet();
+            String response = getString();
+            MoreRetryParam<MR> more = fn.apply(response);
+            if (!more.isRetry) {
+                return more.response;
+            }
+            if (i < retryCount) {
+                log.debug("接口 '{}' 开始第{}次重试.", http.getURI().getPath(), i);
+                sleep(i);
+            }
+        } while (inc.get() < retryCount);
+        return retryFail.get();
+    }
+
+    public <MR> MoreRetryParam<MR> buildMoreRetryParam(boolean isRetry, MR response) {
+        return new MoreRetryParam<>(isRetry, response);
     }
 
     private void resetURI() {
@@ -159,6 +197,23 @@ public abstract class BaseHttp<T, H extends HttpRequestBase> {
         sslContext.init(kmf.getKeyManagers(), null, new SecureRandom());
         SSLConnectionSocketFactory sslConnectionSocketFactory = new SSLConnectionSocketFactory(sslContext, new String[]{"TLSv1"}, null, new DefaultHostnameVerifier());
         return new BasicHttpClientConnectionManager(RegistryBuilder.<ConnectionSocketFactory>create().register("http", PlainConnectionSocketFactory.getSocketFactory()).register("https", sslConnectionSocketFactory).build(), null, null, null);
+    }
+
+    private void sleep(int i) {
+        try {
+            Thread.sleep(500L * i);
+        } catch (InterruptedException ignored) {
+        }
+    }
+
+    public static class MoreRetryParam<MR> {
+        private final boolean isRetry;
+        private final MR      response;
+
+        public MoreRetryParam(boolean isRetry, MR response) {
+            this.isRetry = isRetry;
+            this.response = response;
+        }
     }
 
 }
