@@ -10,7 +10,7 @@ import java.util.Map;
  * @author: Pan
  * @create: 2022-07-14 19:02
  **/
-public class Gets extends BaseHttp<Gets> {
+public class Gets extends BaseHttp<Gets, HttpGet> {
 
     public static Gets request(String url) {
         return new Gets(url);

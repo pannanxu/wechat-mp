@@ -11,7 +11,7 @@ import java.util.Map;
  * @author: Pan
  * @create: 2022-07-14 19:19
  **/
-public class Posts extends BaseHttp<Posts> {
+public class Posts extends BaseHttp<Posts, HttpPost> {
 
     public static Posts request(String url) {
         return new Posts(url);
@@ -42,6 +42,10 @@ public class Posts extends BaseHttp<Posts> {
     @Override
     protected Posts that() {
         return this;
+    }
+
+    public MultipartBuilder<Posts> multipart() {
+        return new MultipartBuilder<>(that(), super.http);
     }
 
 }

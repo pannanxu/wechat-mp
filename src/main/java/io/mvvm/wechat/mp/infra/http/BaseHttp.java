@@ -33,18 +33,18 @@ import java.util.concurrent.ConcurrentHashMap;
  * @create: 2022-07-14 19:09
  **/
 @Slf4j
-public abstract class BaseHttp<T> {
+public abstract class BaseHttp<T, H extends HttpRequestBase> {
 
-    protected     HttpRequestBase                  http;
+    protected     H                                http;
     private final Map<String, String>              params;
     private       BasicHttpClientConnectionManager connectionManager;
 
-    public BaseHttp(HttpRequestBase http) {
+    public BaseHttp(H http) {
         this.http = http;
         this.params = new ConcurrentHashMap<>();
     }
 
-    public BaseHttp(HttpRequestBase http, Map<String, String> params) {
+    public BaseHttp(H http, Map<String, String> params) {
         this.params = params;
         this.http = http;
     }

@@ -44,10 +44,10 @@ public abstract class AbstractBaseApi {
     /**
      * 将请求包装一层, 提供了重试、requestId、刷新AccessToken 等功能
      */
-    protected <T> GsonWrapper requestWrapper(Supplier<BaseHttp<T>> supplier) {
+    protected <T> GsonWrapper requestWrapper(Supplier<BaseHttp<T, ?>> supplier) {
         String requestId = UUID.randomUUID().toString();
         return retryHelper(() -> {
-            BaseHttp<T> http = supplier.get();
+            BaseHttp<T, ?> http = supplier.get();
             http.addHeader("requestId", requestId);
             GsonWrapper wrapper = wrapper(http.getString());
             if (wrapper.isRefreshAccessToken()) {
@@ -87,13 +87,13 @@ public abstract class AbstractBaseApi {
     /**
      * 接口重试请求. 最大会进行3次的请求, 如果全部失败, 则会抛出异常
      */
-    private <T> GsonWrapper retryHelper(Supplier<ValueWrappers.Value2<BaseHttp<T>, GsonWrapper>> supplier) {
-        BaseHttp<T> http = null;
+    private <T> GsonWrapper retryHelper(Supplier<ValueWrappers.Value2<BaseHttp<T, ?>, GsonWrapper>> supplier) {
+        BaseHttp<T, ?> http = null;
         int retryCount = 4;
         AtomicInteger inc = new AtomicInteger(0);
         do {
             int i = inc.incrementAndGet();
-            ValueWrappers.Value2<BaseHttp<T>, GsonWrapper> value = supplier.get();
+            ValueWrappers.Value2<BaseHttp<T, ?>, GsonWrapper> value = supplier.get();
             http = value.getT1();
             GsonWrapper wrapper = value.getT2();
             if (!wrapper.isRetry()) {
