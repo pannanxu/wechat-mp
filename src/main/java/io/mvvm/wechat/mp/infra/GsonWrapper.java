@@ -1,5 +1,6 @@
 package io.mvvm.wechat.mp.infra;
 
+import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -8,6 +9,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * @program: wechat-mp
@@ -71,45 +73,70 @@ public class GsonWrapper {
         this.json = json;
     }
 
-    public JsonObject getJson() {
-        return json;
+    public Optional<JsonObject> getJson() {
+        return Optional.ofNullable(this.json);
     }
 
-    public String getAsStringOrDefault(String key, String defVal) {
-        return json.has(key) ? json.get(key).getAsString() : defVal;
+    public String getAsString(String key, String defVal) {
+        return getJson().map(json -> json.get(key)).map(JsonElement::getAsString).orElse(defVal);
+    }
+
+    public String getAsString(JsonObject json, String key, String defVal) {
+        return Optional.ofNullable(json.get(key)).map(JsonElement::getAsString).orElse(defVal);
     }
 
     public String getAsString(String key) {
-        return getAsStringOrDefault(key, "");
+        return getAsString(key, null);
     }
 
     public List<String> getAsJsonArrayString(String key) {
-        List<String> list = Lists.newArrayList();
-        if (json.has(key)) {
-            JsonArray array = json.getAsJsonArray(key);
-            for (JsonElement el : array) {
-                list.add(el.getAsString());
-            }
-        }
-        return list;
+        return getJson().map(json -> json.get(key))
+                .map(JsonElement::getAsJsonArray)
+                .flatMap((Function<JsonArray, Optional<List<String>>>) array ->
+                        Optional.of(stringElementArrayToList(array)))
+                .orElse(Lists.newArrayList());
     }
 
-    public String getAsString(String... args) {
-        JsonObject object = json;
-        for (int i = 0; i < args.length; i++) {
-            String arg = args[i];
-            if (object.has(arg)) {
-                if (i == args.length - 1) {
-                    return object.get(arg).getAsString();
+    public String getAsStringArgs(String... args) {
+        return getJson().map(json -> {
+            JsonObject object = json;
+            for (int i = 0; i < args.length; i++) {
+                String arg = args[i];
+                if (object.has(arg)) {
+                    if (i == args.length - 1) {
+                        return getAsString(object, arg, null);
+                    }
+                    object = object.getAsJsonObject(arg);
                 }
-                object = object.getAsJsonObject(arg);
             }
-        }
-        return null;
+            return null;
+        }).orElse(null);
+    }
+
+    public GsonWrapper getAsWrapperArgs(String... args) {
+        return getJson().map(json -> {
+                    JsonObject object = json;
+                    for (String arg : args) {
+                        if (object.has(arg)) {
+                            object = object.getAsJsonObject(arg);
+                        }
+                    }
+                    return object;
+                })
+                .map(GsonWrapper::of)
+                .orElse(new GsonWrapper(null));
     }
 
     @Override
     public String toString() {
         return this.json.toString();
+    }
+
+    private List<String> stringElementArrayToList(JsonArray array) {
+        List<String> list = Lists.newArrayList();
+        for (JsonElement el : array) {
+            list.add(el.getAsString());
+        }
+        return list;
     }
 }

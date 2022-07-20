@@ -18,7 +18,7 @@ public class SimpleUserManager extends UserApi implements IUserManager {
     @Override
     public String createTag(String appId, String tagName) {
         GsonWrapper helper = requestCreateTag(appId, tagName);
-        return helper.getAsString("tag", "id");
+        return helper.getAsStringArgs("tag", "id");
     }
 
 }
