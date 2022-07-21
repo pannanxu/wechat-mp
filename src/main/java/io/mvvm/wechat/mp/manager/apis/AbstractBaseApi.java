@@ -49,7 +49,7 @@ public abstract class AbstractBaseApi {
             if (wrapper.isRefreshAccessToken()) {
                 refreshAccessTokenApi(http.getAppId());
             }
-            return http.buildMoreRetryParam(wrapper.isRetry(), wrapper);
+            return Pair.create(wrapper.isRetry(), wrapper);
         }, () -> {
             throw new RetryHelperException(Strings.lenientFormat("重试多次接口后失败 [%s]", http.getUri()));
         });

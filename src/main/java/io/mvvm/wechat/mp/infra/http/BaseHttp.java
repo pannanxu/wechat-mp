@@ -1,6 +1,7 @@
 package io.mvvm.wechat.mp.infra.http;
 
 import com.google.common.base.Strings;
+import io.mvvm.wechat.mp.infra.Pair;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -136,15 +137,15 @@ public abstract class BaseHttp<T, H extends HttpRequestBase> {
      * @param fn        解析结果, 并告知是否需要进行重试,
      * @param retryFail 多次重试失败后执行的回调
      */
-    public <MR> MR getStringRetryHelper(Function<String, MoreRetryParam<MR>> fn, Supplier<MR> retryFail) {
+    public <MR> MR getStringRetryHelper(Function<String, Pair<Boolean, MR>> fn, Supplier<MR> retryFail) {
         int retryCount = 4;
         AtomicInteger inc = new AtomicInteger(0);
         do {
             int i = inc.incrementAndGet();
             String response = getString();
-            MoreRetryParam<MR> more = fn.apply(response);
-            if (!more.isRetry) {
-                return more.response;
+            Pair<Boolean, MR> more = fn.apply(response);
+            if (!more.getFirst()) {
+                return more.getSecond();
             }
             if (i < retryCount) {
                 log.debug("接口 '{}' 开始第{}次重试.", http.getURI().getPath(), i);
@@ -152,10 +153,6 @@ public abstract class BaseHttp<T, H extends HttpRequestBase> {
             }
         } while (inc.get() < retryCount);
         return retryFail.get();
-    }
-
-    public <MR> MoreRetryParam<MR> buildMoreRetryParam(boolean isRetry, MR response) {
-        return new MoreRetryParam<>(isRetry, response);
     }
 
     private void resetURI() {
@@ -203,16 +200,6 @@ public abstract class BaseHttp<T, H extends HttpRequestBase> {
         try {
             Thread.sleep(500L * i);
         } catch (InterruptedException ignored) {
-        }
-    }
-
-    public static class MoreRetryParam<MR> {
-        private final boolean isRetry;
-        private final MR      response;
-
-        public MoreRetryParam(boolean isRetry, MR response) {
-            this.isRetry = isRetry;
-            this.response = response;
         }
     }
 
