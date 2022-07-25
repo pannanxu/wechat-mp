@@ -2,6 +2,7 @@ package io.mvvm.wechat.mp.infra.http;
 
 import com.google.common.base.Strings;
 import io.mvvm.wechat.mp.infra.Pair;
+import io.mvvm.wechat.mp.infra.WechatException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -25,6 +26,7 @@ import java.net.URISyntaxException;
 import java.security.KeyStore;
 import java.security.SecureRandom;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
@@ -96,7 +98,7 @@ public abstract class BaseHttp<T, H extends HttpRequestBase> {
         return this.that();
     }
 
-    public String getString() {
+    public Optional<String> getString() {
         resetURI();
         try (CloseableHttpClient client = HttpClientBuilder.create().setConnectionManager(connectionManager).build()) {
             CloseableHttpResponse response = client.execute(this.http);
@@ -107,11 +109,11 @@ public abstract class BaseHttp<T, H extends HttpRequestBase> {
                             "QueryParams: '{}' \n" +
                             "ResponseBody: '{}'",
                     http.getURI().getPath(), http.getURI().getQuery(), result);
-            return result;
+            return Optional.ofNullable(result);
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return null;
+        return Optional.empty();
     }
 
     public InputStream getContent() {
@@ -142,8 +144,8 @@ public abstract class BaseHttp<T, H extends HttpRequestBase> {
         AtomicInteger inc = new AtomicInteger(0);
         do {
             int i = inc.incrementAndGet();
-            String response = getString();
-            Pair<Boolean, MR> more = fn.apply(response);
+            Pair<Boolean, MR> more = getString().map(fn)
+                    .orElseThrow(() -> new WechatException("RetryHelper error"));
             if (!more.getFirst()) {
                 return more.getSecond();
             }
